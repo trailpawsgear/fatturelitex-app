@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+  <html lang="it">
+  <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FattureLiteX — Fattura Elettronica per il Regime Forfettario</title>
+<meta name="description" content="Genera gratis il file XML di fattura elettronica conforme FatturaPA per il regime forfettario italiano. Nessun account, nessun abbonamento, tutto nel browser." />
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg-elevated: #171a23;
+    --card: #1b1e29;
+    --border: #2a2e3b;
+    --text: #f2f3f7;
+          --text-muted: #9ba0b3;
+    --accent: #2fb67c;
+    --accent-2: #5ed6b0;
+    --accent-grad: linear-gradient(135deg, #2fb67c 0%, #5ed6b0 100%);
+    --success: #35d08f;
+    --error: #ff6b6b;
+          --warn: #f5b942;
+          --radius: 14px;
+}
+  * { box-sizing: border-box; }
+  html, body {
+        margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+}
+  a { color: inherit; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+  header.site { padding: 22px 0; border-bottom: 1px solid var(--border); }
+  header.site .wrap { display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.15rem; letter-spacing: -0.02em; }
+  .brand-mark {
+        width: 34px; height: 34px; border-radius: 9px;
+    background: var(--accent-grad);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; font-weight: 800; color: #04150e;
+}
+  nav.site-nav a { text-decoration: none; color: var(--text-muted); font-size: 0.92rem; margin-left: 26px; }
+  nav.site-nav a:hover { color: var(--text); }
+
+  .hero { padding: 64px 0 40px; text-align: center; }
+  .hero .eyebrow {
+    display: inline-block;
+    font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent-2);
+    background: rgba(94,214,176,0.1);
+    border: 1px solid rgba(94,214,176,0.3);
+    padding: 6px 14px; border-radius: 100px;
+    margin-bottom: 22px;
+  }
+  .hero h1 { font-size: clamp(1.9rem, 4.6vw, 2.9rem); line-height: 1.14; margin: 0 0 18px; letter-spacing: -0.02em; }
+  .hero h1 span { background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p.lead { max-width: 640px; margin: 0 auto 10px; color: var(--text-muted); font-size: 1.05rem; }
+
+  main { padding: 10px 0 70px; }
+
+  .disclaimer {
+        background: rgba(245,185,66,0.08);
+    border: 1px solid rgba(245,185,66,0.35);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    margin-bottom: 26px;
+}
+  .disclaimer strong { color: var(--warn); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; margin-bottom: 20px; }
+  .panel h2 { margin: 0 0 18px; font-size: 1.05rem; }
+  .panel h2 .step-num {
+        display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--accent-grad); color: #04150e; font-size: 0.78rem; font-weight: 800;
+    margin-right: 10px;
+}
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+  .field input[type="text"], .field input[type="number"], .field input[type="date"], .field select, .field textarea {
+        width: 100%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+}
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+  .field .hint { font-size: 0.74rem; color: var(--text-muted); margin-top: 4px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field-row3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+
+  .lines-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+  .lines-table th { text-align: left; font-size: 0.74rem; color: var(--text-muted); font-weight: 600; padding: 0 6px 8px; }
+  .lines-table td { padding: 4px 6px; vertical-align: top; }
+  .lines-table input { width: 100%; }
+  .lines-table .remove-line {
+        background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem;
+}
+  .lines-table .remove-line:hover { color: var(--error); }
+
+  button.primary {
+    background: var(--accent-grad);
+    color: #04150e; border: none;
+    font-weight: 700; font-size: 0.95rem;
+    padding: 13px 26px; border-radius: 10px;
+    cursor: pointer;
+  }
+  button.primary:hover { filter: brightness(1.05); }
+  button.secondary {
+    background: transparent; color: var(--text); border: 1px solid var(--border);
+    font-weight: 600; font-size: 0.86rem; padding: 9px 16px; border-radius: 9px; cursor: pointer;
+  }
+  button.secondary:hover { border-color: var(--accent); }
+
+  .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 0.86rem; color: var(--text-muted); margin-top: 10px; }
+  .checkbox-row input { width: auto; }
+
+  .totals { text-align: right; font-size: 0.9rem; color: var(--text-muted); margin-top: 6px; }
+  .totals .grand { font-size: 1.15rem; color: var(--text); font-weight: 700; margin-top: 4px; }
+
+  .actions-row { display: flex; align-items: center; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+  #status { font-size: 0.86rem; color: var(--text-muted); }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 50px 0; }
+  .step { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+  .step .num {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--accent-grad); color: #04150e; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px; font-size: 0.9rem;
+  }
+  .step h3 { margin: 0 0 8px; font-size: 1.02rem; }
+  .step p { margin: 0; color: var(--text-muted); font-size: 0.88rem; }
+
+  footer.site { border-top: 1px solid var(--border); padding: 28px 0; color: var(--text-muted); font-size: 0.82rem; text-align: center; }
+
+  @media (max-width: 760px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .field-row, .field-row3 { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr; }
+  }
+</style>
+  </head>
+  <body>
+
+  <header class="site">
+    <div class="wrap">
+      <div class="brand"><span class="brand-mark">F</span>FattureLiteX</div>
+      <nav class="site-nav"><a href="#how-it-works">Come funziona</a></nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Regime forfettario · Gratis · Nessun account</span>
+    <h1>Fattura elettronica <span>pronta in un minuto</span></h1>
+      <p class="lead">
+        Compila i dati, scarica il file XML conforme allo standard FatturaPA, pronto da caricare sul portale Fatture e Corrispettivi o sul software del tuo intermediario. Tutto nel tuo browser: nessun dato lascia questo computer.
+      </p>
+  </div>
+</section>
+
+<main>
+  <div class="wrap">
+
+    <div class="disclaimer">
+      <strong>Nota importante:</strong> questo strumento genera un file XML conforme allo standard FatturaPA per il regime forfettario (RF19), pronto per l'invio tramite il portale "Fatture e Corrispettivi" dell'Agenzia delle Entrate, un intermediario abilitato o il software del tuo commercialista. Non invia la fattura al Sistema di Interscambio al posto tuo e non sostituisce la consulenza del tuo commercialista: verifica sempre i dati, in particolare l'imposta di bollo e la numerazione progressiva, prima di trasmettere la fattura.
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h2><span class="step-num">1</span>I tuoi dati (cedente/prestatore)</h2>
+          <div class="field">
+            <label>Nome e cognome o ragione sociale</label>
+            <input type="text" id="cedDenominazione" placeholder="Mario Rossi" />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Partita IVA</label>
+              <input type="text" id="cedPiva" placeholder="12345678901" maxlength="11" />
+            </div>
+            <div class="field">
+              <label>Codice fiscale</label>
+              <input type="text" id="cedCf" placeholder="RSSMRA80A01H501U" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Indirizzo</label>
+            <input type="text" id="cedIndirizzo" placeholder="Via Roma 1" />
+          </div>
+          <div class="field-row3">
+            <div class="field">
+              <label>Comune</label>
+              <input type="text" id="cedComune" placeholder="Torino" />
+            </div>
+            <div class="field">
+              <label>Provincia</label>
+              <input type="text" id="cedProvincia" placeholder="TO" maxlength="2" />
+            </div>
+            <div class="field">
+              <label>CAP</label>
+              <input type="text" id="cedCap" placeholder="10100" maxlength="5" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Regime fiscale</label>
+            <input type="text" value="RF19 — Regime forfettario (art. 1, c. 54-89, L. 190/2014)" disabled />
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2><span class="step-num">2</span>Dati cliente (cessionario/committente)</h2>
+          <div class="field">
+            <label>Nome e cognome o ragione sociale</label>
+            <input type="text" id="cliDenominazione" placeholder="Azienda Cliente Srl" />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Partita IVA <span style="font-weight:400;">(se azienda)</span></label>
+              <input type="text" id="cliPiva" placeholder="98765432109" maxlength="11" />
+            </div>
+            <div class="field">
+              <label>Codice fiscale <span style="font-weight:400;">(se privato)</span></label>
+            <input type="text" id="cliCf" placeholder="" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Indirizzo</label>
+            <input type="text" id="cliIndirizzo" placeholder="Via Milano 2" />
+          </div>
+          <div class="field-row3">
+            <div class="field">
+              <label>Comune</label>
+              <input type="text" id="cliComune" placeholder="Milano" />
+            </div>
+            <div class="field">
+              <label>Provincia</label>
+              <input type="text" id="cliProvincia" placeholder="MI" maxlength="2" />
+            </div>
+            <div class="field">
+              <label>CAP</label>
+              <input type="text" id="cliCap" placeholder="20100" maxlength="5" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Codice destinatario SdI <span style="font-weight:400;">(lascia 0000000 se invii tu la fattura, o se il cliente userà la PEC)</span></label>
+          <input type="text" id="cliCodDest" value="0000000" maxlength="7" />
+          </div>
+          <div class="field">
+            <label>PEC destinatario <span style="font-weight:400;">(opzionale, se non hai il codice destinatario)</span></label>
+            <input type="text" id="cliPec" placeholder="cliente@pec.it" />
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2><span class="step-num">3</span>Dati fattura</h2>
+        <div class="field-row3">
+          <div class="field">
+            <label>Numero fattura</label>
+            <input type="text" id="fatNumero" placeholder="1" />
+          </div>
+          <div class="field">
+            <label>Data</label>
+            <input type="date" id="fatData" />
+          </div>
+          <div class="field">
+            <label>Causale</label>
+            <input type="text" id="fatCausale" placeholder="Prestazione di servizi" />
+          </div>
+        </div>
+
+        <table class="lines-table" id="linesTable">
+          <thead>
+            <tr>
+              <th style="width:46%">Descrizione</th>
+              <th style="width:14%">Quantità</th>
+              <th style="width:18%">Prezzo unitario (€)</th>
+              <th style="width:16%">Totale (€)</th>
+              <th style="width:6%"></th>
+            </tr>
+          </thead>
+          <tbody id="linesBody"></tbody>
+        </table>
+        <button class="secondary" id="addLineBtn">+ Aggiungi riga</button>
+
+        <div class="totals">
+          <div>Imponibile: <strong id="totImponibile">€ 0,00</strong></div>
+          <div>IVA: <strong>€ 0,00 (operazione non soggetta, regime forfettario)</strong></div>
+          <div class="checkbox-row" style="justify-content:flex-end;">
+            <input type="checkbox" id="bolloCheck" />
+            <label for="bolloCheck">Applica imposta di bollo di € 2,00 (obbligatoria se il totale supera € 77,47)</label>
+          </div>
+          <div class="grand">Totale documento: <span id="totDocumento">€ 0,00</span></div>
+        </div>
+
+        <div class="field" style="margin-top: 18px;">
+          <label>Dicitura regime forfettario (comparirà in fattura, modificabile)</label>
+          <textarea id="noteRegime" rows="2">Operazione effettuata ai sensi dell'art. 1, commi 54-89, L. 190/2014 (regime forfettario). Operazione non soggetta ad IVA, non soggetta a ritenuta d'acconto ai sensi dell'art. 1, comma 67, L. 190/2014.</textarea>
+        </div>
+
+        <div class="actions-row">
+          <button class="primary" id="generateBtn">Genera e scarica XML</button>
+        <button class="secondary" id="previewBtn">Anteprima fattura</button>
+          <span id="status"></span>
+        </div>
+      </div>
+
+      <div class="panel" id="previewPanel" style="display:none;">
+        <h2>Anteprima</h2>
+        <div id="previewContent" style="font-size:0.88rem; color: var(--text-muted); white-space: pre-wrap; line-height: 1.7;"></div>
+      </div>
+
+      <div class="steps" id="how-it-works">
+        <div class="step">
+          <div class="num">1</div>
+          <h3>Compila i dati</h3>
+        <p>I tuoi dati, quelli del cliente, le righe della fattura. Tutto resta sul tuo computer, niente viene inviato altrove.</p>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <h3>Scarica l'XML</h3>
+          <p>Il file è conforme allo standard FatturaPA, con il regime forfettario (RF19) e la natura IVA (N2.2) già impostati correttamente.</p>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <h3>Invialo tu</h3>
+          <p>Carica il file sul portale Fatture e Corrispettivi dell'Agenzia delle Entrate o passalo al tuo commercialista/intermediario per l'invio allo SdI.</p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site">
+    <div class="wrap">FattureLiteX — fattura elettronica semplice per il regime forfettario.</div>
+  </footer>
+
+  <script>
+    const linesBody = document.getElementById("linesBody");
+  const addLineBtn = document.getElementById("addLineBtn");
+  const generateBtn = document.getElementById("generateBtn");
+  const previewBtn = document.getElementById("previewBtn");
+  const statusEl = document.getElementById("status");
+  const bolloCheck = document.getElementById("bolloCheck");
+  const totImponibileEl = document.getElementById("totImponibile");
+  const totDocumentoEl = document.getElementById("totDocumento");
+  const previewPanel = document.getElementById("previewPanel");
+  const previewContent = document.getElementById("previewContent");
+
+  document.getElementById("fatData").value = new Date().toISOString().slice(0, 10);
+
+  function addLine(desc = "", qty = "1", price = "") {
+        const tr = document.createElement("tr");
+    tr.innerHTML = `
+            <td><input type="text" class="line-desc" value="${desc}" placeholder="Consulenza, progettazione, ecc." /></td>
+            <td><input type="number" class="line-qty" value="${qty}" min="0" step="0.01" /></td>
+            <td><input type="number" class="line-price" value="${price}" min="0" step="0.01" /></td>
+            <td><span class="line-total">€ 0,00</span></td>
+            <td><button class="remove-line" title="Rimuovi riga">✕</button></td>
+          `;
+    linesBody.appendChild(tr);
+    tr.querySelectorAll(".line-qty, .line-price").forEach((el) => el.addEventListener("input", recalc));
+    tr.querySelector(".remove-line").addEventListener("click", () => { tr.remove(); recalc(); });
+    recalc();
+    }
+
+  function fmt(n) {
+        return "€ " + n.toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function getLines() {
+        return Array.from(linesBody.querySelectorAll("tr")).map((tr) => {
+                const desc = tr.querySelector(".line-desc").value.trim();
+                const qty = parseFloat(tr.querySelector(".line-qty").value) || 0;
+      const price = parseFloat(tr.querySelector(".line-price").value) || 0;
+      const total = qty * price;
+      tr.querySelector(".line-total").textContent = fmt(total);
+      return { desc, qty, price, total };
+  });
+}
+
+  function recalc() {
+        const lines = getLines();
+    const imponibile = lines.reduce((s, l) => s + l.total, 0);
+    totImponibileEl.textContent = fmt(imponibile);
+    bolloCheck.checked = imponibile > 77.47 ? bolloCheck.checked || true : bolloCheck.checked;
+    const bollo = bolloCheck.checked ? 2 : 0;
+    totDocumentoEl.textContent = fmt(imponibile + bollo);
+    return { lines, imponibile, bollo, totale: imponibile + bollo };
+  }
+
+  bolloCheck.addEventListener("change", recalc);
+  addLineBtn.addEventListener("click", () => addLine());
+  addLine("Prestazione di servizi", "1", "");
+
+  function escapeXml(s) {
+        return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+          }
+
+  function collectData() {
+        return {
+                ced: {
+                  denominazione: document.getElementById("cedDenominazione").value.trim(),
+                            piva: document.getElementById("cedPiva").value.trim(),
+                            cf: document.getElementById("cedCf").value.trim(),
+                            indirizzo: document.getElementById("cedIndirizzo").value.trim(),
+                            comune: document.getElementById("cedComune").value.trim(),
+                            provincia: document.getElementById("cedProvincia").value.trim().toUpperCase(),
+                            cap: document.getElementById("cedCap").value.trim(),
+                    },
+                          cli: {
+        denominazione: document.getElementById("cliDenominazione").value.trim(),
+                  piva: document.getElementById("cliPiva").value.trim(),
+                  cf: document.getElementById("cliCf").value.trim(),
+                  indirizzo: document.getElementById("cliIndirizzo").value.trim(),
+                  comune: document.getElementById("cliComune").value.trim(),
+                  provincia: document.getElementById("cliProvincia").value.trim().toUpperCase(),
+                  cap: document.getElementById("cliCap").value.trim(),
+                  codDest: (document.getElementById("cliCodDest").value.trim() || "0000000").padEnd(7, "0").slice(0, 7),
+                  pec: document.getElementById("cliPec").value.trim(),
+          },
+                numero: document.getElementById("fatNumero").value.trim() || "1",
+                        data: document.getElementById("fatData").value,
+                        causale: document.getElementById("fatCausale").value.trim(),
+                        noteRegime: document.getElementById("noteRegime").value.trim(),
+                  };
+  }
+
+  function validate(d, calc) {
+        const errors = [];
+    if (!d.ced.denominazione) errors.push("Inserisci il tuo nome o ragione sociale.");
+    if (!/^\d{11}$/.test(d.ced.piva)) errors.push("La tua partita IVA deve avere 11 cifre.");
+    if (!d.cli.denominazione) errors.push("Inserisci il nome o ragione sociale del cliente.");
+    if (!d.cli.piva && !d.cli.cf) errors.push("Inserisci almeno la partita IVA o il codice fiscale del cliente.");
+    if (!calc.lines.length || calc.lines.every((l) => !l.desc || l.total <= 0)) errors.push("Aggiungi almeno una riga con descrizione, quantità e prezzo.");
+    return errors;
+  }
+
+  function buildXml(d, calc) {
+        const progressivo = String(d.numero).padStart(5, "0").slice(-5);
+    const righe = calc.lines
+      .filter((l) => l.desc && l.total > 0)
+      .map(
+        (l, i) => `      <DettaglioLinee>
+        <NumeroLinea>${i + 1}</NumeroLinea>
+        <Descrizione>${escapeXml(l.desc)}</Descrizione>
+        <Quantita>${l.qty.toFixed(2)}</Quantita>
+        <PrezzoUnitario>${l.price.toFixed(2)}</PrezzoUnitario>
+        <PrezzoTotale>${l.total.toFixed(2)}</PrezzoTotale>
+        <AliquotaIVA>0.00</AliquotaIVA>
+        <Natura>N2.2</Natura>
+      </DettaglioLinee>`
+      )
+      .join("\n");
+
+    const bolloBlock = calc.bollo
+      ? `        <DatiBollo>
+          <BolloVirtuale>SI</BolloVirtuale>
+          <ImportoBollo>2.00</ImportoBollo>
+        </DatiBollo>\n`
+      : "";
+
+    const cliFiscale = d.cli.piva
+      ? `          <IdFiscaleIVA>
+            <IdPaese>IT</IdPaese>
+            <IdCodice>${escapeXml(d.cli.piva)}</IdCodice>
+          </IdFiscaleIVA>\n`
+      : d.cli.cf
+            ? `          <CodiceFiscale>${escapeXml(d.cli.cf)}</CodiceFiscale>\n`
+            : "";
+
+    const pecBlock = !d.cli.piva && d.cli.codDest === "0000000" && d.cli.pec
+      ? `      <PECDestinatario>${escapeXml(d.cli.pec)}</PECDestinatario>\n`
+      : "";
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+      <p:FatturaElettronica xmlns:p="http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" versione="FPR12">
+        <FatturaElettronicaHeader>
+          <DatiTrasmissione>
+            <IdTrasmittente>
+              <IdPaese>IT</IdPaese>
+              <IdCodice>${escapeXml(d.ced.piva)}</IdCodice>
+            </IdTrasmittente>
+            <ProgressivoInvio>${progressivo}</ProgressivoInvio>
+            <FormatoTrasmissione>FPR12</FormatoTrasmissione>
+            <CodiceDestinatario>${escapeXml(d.cli.codDest)}</CodiceDestinatario>
+      ${pecBlock}    </DatiTrasmissione>
+          <CedentePrestatore>
+            <DatiAnagrafici>
+              <IdFiscaleIVA>
+                <IdPaese>IT</IdPaese>
+                <IdCodice>${escapeXml(d.ced.piva)}</IdCodice>
+              </IdFiscaleIVA>
+              <CodiceFiscale>${escapeXml(d.ced.cf || d.ced.piva)}</CodiceFiscale>
+              <Anagrafica>
+                <Denominazione>${escapeXml(d.ced.denominazione)}</Denominazione>
+              </Anagrafica>
+              <RegimeFiscale>RF19</RegimeFiscale>
+            </DatiAnagrafici>
+            <Sede>
+              <Indirizzo>${escapeXml(d.ced.indirizzo)}</Indirizzo>
+              <CAP>${escapeXml(d.ced.cap)}</CAP>
+              <Comune>${escapeXml(d.ced.comune)}</Comune>
+              <Provincia>${escapeXml(d.ced.provincia)}</Provincia>
+              <Nazione>IT</Nazione>
+            </Sede>
+          </CedentePrestatore>
+          <CessionarioCommittente>
+            <DatiAnagrafici>
+      ${cliFiscale}        <Anagrafica>
+                <Denominazione>${escapeXml(d.cli.denominazione)}</Denominazione>
+              </Anagrafica>
+            </DatiAnagrafici>
+            <Sede>
+              <Indirizzo>${escapeXml(d.cli.indirizzo)}</Indirizzo>
+              <CAP>${escapeXml(d.cli.cap)}</CAP>
+              <Comune>${escapeXml(d.cli.comune)}</Comune>
+              <Provincia>${escapeXml(d.cli.provincia)}</Provincia>
+              <Nazione>IT</Nazione>
+            </Sede>
+          </CessionarioCommittente>
+        </FatturaElettronicaHeader>
+        <FatturaElettronicaBody>
+          <DatiGenerali>
+            <DatiGeneraliDocumento>
+              <TipoDocumento>TD01</TipoDocumento>
+              <Divisa>EUR</Divisa>
+              <Data>${d.data}</Data>
+              <Numero>${escapeXml(d.numero)}</Numero>
+      ${bolloBlock}        <Causale>${escapeXml(d.causale || d.noteRegime)}</Causale>
+            </DatiGeneraliDocumento>
+          </DatiGenerali>
+          <DatiBeniServizi>
+      ${righe}
+      <DatiRiepilogo>
+              <AliquotaIVA>0.00</AliquotaIVA>
+              <Natura>N2.2</Natura>
+              <ImponibileImporto>${calc.imponibile.toFixed(2)}</ImponibileImporto>
+              <Imposta>0.00</Imposta>
+            </DatiRiepilogo>
+          </DatiBeniServizi>
+          <DatiPagamento>
+            <CondizioniPagamento>TP02</CondizioniPagamento>
+            <DettaglioPagamento>
+              <ModalitaPagamento>MP05</ModalitaPagamento>
+              <ImportoPagamento>${calc.totale.toFixed(2)}</ImportoPagamento>
+            </DettaglioPagamento>
+          </DatiPagamento>
+        </FatturaElettronicaBody>
+      </p:FatturaElettronica>
+      `;
+  }
+
+  function buildPreviewText(d, calc) {
+        const righeTxt = calc.lines
+      .filter((l) => l.desc && l.total > 0)
+      .map((l) => `  • ${l.desc} — ${l.qty} x ${fmt(l.price)} = ${fmt(l.total)}`)
+      .join("\n");
+    return `FATTURA N. ${d.numero} del ${d.data}
+
+DA: ${d.ced.denominazione}
+P.IVA ${d.ced.piva}${d.ced.cf ? " — CF " + d.ced.cf : ""}
+${d.ced.indirizzo}, ${d.ced.cap} ${d.ced.comune} (${d.ced.provincia})
+  Regime forfettario (RF19)
+
+A: ${d.cli.denominazione}
+${d.cli.piva ? "P.IVA " + d.cli.piva : "CF " + d.cli.cf}
+${d.cli.indirizzo}, ${d.cli.cap} ${d.cli.comune} (${d.cli.provincia})
+
+  Causale: ${d.causale || "—"}
+
+${righeTxt}
+
+Imponibile: ${fmt(calc.imponibile)}
+${calc.bollo ? "Imposta di bollo: " + fmt(calc.bollo) + "\n" : ""}Totale documento: ${fmt(calc.totale)}
+
+${d.noteRegime}`;
+                                  }
+
+  previewBtn.addEventListener("click", () => {
+        const d = collectData();
+    const calc = recalc();
+    previewContent.textContent = buildPreviewText(d, calc);
+    previewPanel.style.display = "block";
+    previewPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+                                  });
+
+  generateBtn.addEventListener("click", () => {
+        const d = collectData();
+    const calc = recalc();
+    const errors = validate(d, calc);
+    if (errors.length) {
+      statusEl.textContent = "⚠ " + errors[0];
+      statusEl.style.color = "var(--error)";
+      return;
+    }
+    statusEl.style.color = "var(--text-muted)";
+
+    const xml = buildXml(d, calc);
+    const blob = new Blob([xml], { type: "application/xml;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const progressivo = String(d.numero).padStart(5, "0").slice(-5);
+    a.download = `IT${d.ced.piva}_${progressivo}.xml`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    statusEl.textContent = "✓ File XML scaricato.";
+});
+</script>
+
+  </body>
+  </html>
+  
